@@ -1,7 +1,9 @@
 import sys
+import time
+import itertools
 import numpy as np
 import matplotlib.pyplot as plt
-import itertools
+
 
 class FSProblem:
     def __init__(self, lines):
@@ -54,12 +56,26 @@ class FSProblem:
 
         return list_of_machines
 
+    def bruteforce(self):
+        # permutation
+        permu = list(itertools.permutations(list(range(self.jobs_count))))
+
+        c_max = 100000
+        for order in permu:
+            machines_schedule = self.get_machines_schedule(order)
+            time_of = machines_schedule[-1][-1][-1]  # last machine, last row, endtime
+            if time_of < c_max:
+                c_max = time_of
+                optimal_order = order
+        print("Best time equals: ", c_max, "For order: ", optimal_order)
+        return c_max, optimal_order
+
     def display_gantt_chart(self, machines_schedule):
         rect_height = 5
         max_y_position = len(machines_schedule) * (2 * rect_height) - rect_height
         fig, ax = plt.subplots()
         ax.set_ylim(0, max_y_position + 2 * rect_height)
-        ax.set_xlim(0, np.max(machines_schedule))
+        ax.set_xlim(0, machines_schedule[-1][-1][-1])
         ax.set_xlabel('Time units')
         ax.set_yticks(np.linspace(rect_height, max_y_position, num=len(machines_schedule)))
         ax.set_yticklabels(["Machine " + str(i) for i in range(len(machines_schedule), 0, -1)])
@@ -90,6 +106,19 @@ class Operation:
         self.end = end
 
 
+class Timer:
+    def __init__(self):
+        self.start_time = 0
+
+    def start(self):
+        self.start_time = time.perf_counter()
+
+    def stop(self):
+        elapsed_time = time.perf_counter() - self.start_time
+        self.start_time = 0
+        print(f"Elapsed time: {elapsed_time:0.6f} seconds")
+
+
 def get_file_content():
     try:
         with open(sys.argv[1]) as f:
@@ -99,40 +128,17 @@ def get_file_content():
         exit()
 
 
-def permutation(fs_problem):
-    # permutation
-    permu = list(itertools.permutations(list(range(fs_problem.jobs_count))))
-
-    best_time = 100000
-    j = -1
-    for i in range(len(permu)):
-        order = permu[i]
-        print(order)
-        machines_schedule = fs_problem.get_machines_schedule(order)
-        time_of = machines_schedule[-1][-1][-1]  # last machine, last row, endtime
-        print(time_of)
-        if time_of < best_time:
-            best_time = time_of
-            j = i
-       # fs_problem.display_gantt_chart(machines_schedule)
-    print("Best time equal: ", best_time, "For order: ", permu[j])
-
-
-
-
 def main():
     fs_problem = FSProblem(get_file_content())
     print(fs_problem)
 
-    order = list(range(fs_problem.jobs_count))
-    machines_schedule = fs_problem.get_machines_schedule(order)
-    time_of = machines_schedule[-1][-1][-1] # last machine, last row, endtime
-    print(time_of)
-    fs_problem.display_gantt_chart(machines_schedule)
+    t = Timer()
+    t.start()
+    c_max, optimal_order = fs_problem.bruteforce()
+    t.stop()
 
-    permutation(fs_problem)
-
-
+    schedule = fs_problem.get_machines_schedule(optimal_order)
+    fs_problem.display_gantt_chart(schedule)
 
 
 if __name__ == "__main__":
