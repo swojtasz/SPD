@@ -70,7 +70,7 @@ class FSProblem:
         print("Best time equals: ", c_max, "For order: ", optimal_order)
         return c_max, optimal_order
 
-    def display_gantt_chart(self, machines_schedule):
+    def display_gantt_chart(self, machines_schedule, order):
         rect_height = 5
         max_y_position = len(machines_schedule) * (2 * rect_height) - rect_height
         fig, ax = plt.subplots()
@@ -93,7 +93,7 @@ class FSProblem:
             for i, operation in enumerate(machine):
                 ax.text(x=operation[0] + operation[1] / 2,
                         y=rect_position_y + rect_height / 2,
-                        s="J" + str(i),
+                        s="J" + str(order[i]),
                         ha='center',
                         va='center',
                         color='black')
@@ -138,7 +138,7 @@ def main():
     t.stop()
 
     schedule = fs_problem.get_machines_schedule(optimal_order)
-    fs_problem.display_gantt_chart(schedule)
+    fs_problem.display_gantt_chart(schedule, optimal_order)
 
 
 if __name__ == "__main__":
