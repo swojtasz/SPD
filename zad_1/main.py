@@ -1,6 +1,7 @@
 import sys
 import time
 import itertools
+import multiprocessing as mp
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -59,16 +60,16 @@ class FSProblem:
     def bruteforce(self):
         # permutation
         permu = list(itertools.permutations(list(range(self.jobs_count))))
-
-        c_max = 100000
-        for order in permu:
-            machines_schedule = self.get_machines_schedule(order)
-            time_of = machines_schedule[-1][-1][-1]  # last machine, last row, endtime
-            if time_of < c_max:
-                c_max = time_of
-                optimal_order = order
+        with mp.Pool(4) as pool:
+            results = np.array(pool.map(self.bruteforce_worker, permu))
+        c_max = np.min(results)
+        optimal_order = permu[np.argmin(results)]
         print("Best time equals: ", c_max, "For order: ", optimal_order)
         return c_max, optimal_order
+
+    def bruteforce_worker(self, order):
+        machines_schedule = self.get_machines_schedule(order)
+        return machines_schedule[-1][-1][-1]  # last machine, last row, endtime
 
     def display_gantt_chart(self, machines_schedule, order):
         rect_height = 5
