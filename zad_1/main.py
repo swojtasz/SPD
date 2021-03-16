@@ -71,6 +71,31 @@ class FSProblem:
         machines_schedule = self.get_machines_schedule(order)
         return machines_schedule[-1][-1][-1]  # last machine, last row, endtime
 
+    def jackson2(self):
+        jobs = self.jobs
+        jackson2_order = [-1] * len(jobs)
+        front = 0
+        back = len(jobs) - 1
+        for x in range(len(jobs)):
+            lowest_value = 10000
+            i_best = -1
+            j_best = -1
+            for i in range(len(jobs)):
+                for j in range(len(jobs[i])):
+                    if jobs[i][j] < lowest_value:
+                        lowest_value = jobs[i][j]
+                        i_best = i
+                        j_best = j
+            if j_best == 1:
+                jackson2_order[back] = i_best
+                back = back - 1
+                jobs[i_best] = [10000, 10000]
+            if j_best == 0:
+                jackson2_order[front] = i_best
+                front = front + 1
+                jobs[i_best] = [10000, 10000]
+        return jackson2_order
+
     def display_gantt_chart(self, machines_schedule, order):
         rect_height = 5
         max_y_position = len(machines_schedule) * (2 * rect_height) - rect_height
@@ -137,6 +162,9 @@ def main():
     t.start()
     c_max, optimal_order = fs_problem.bruteforce()
     t.stop()
+
+    jackson_order = fs_problem.jackson2()
+    print("Jackson order is: ", jackson_order)
 
     schedule = fs_problem.get_machines_schedule(optimal_order)
     fs_problem.display_gantt_chart(schedule, optimal_order)
