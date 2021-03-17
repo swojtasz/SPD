@@ -1,9 +1,11 @@
 import sys
 import time
 import itertools
+import argparse
 import multiprocessing as mp
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy.core.shape_base import block
 
 
 class FSProblem:
@@ -57,10 +59,10 @@ class FSProblem:
 
         return list_of_machines
 
-    def bruteforce(self):
+    def bruteforce(self, workers):
         # permutation
         permu = list(itertools.permutations(list(range(self.jobs_count))))
-        with mp.Pool(4) as pool:
+        with mp.Pool(workers) as pool:
             results = np.array(pool.map(self.bruteforce_worker, permu))
         c_max = np.min(results)
         optimal_order = permu[np.argmin(results)]
@@ -145,33 +147,37 @@ class Timer:
         print(f"Elapsed time: {elapsed_time:0.6f} seconds")
 
 
-def get_file_content():
+def get_file_content(filepath):
     try:
-        with open(sys.argv[1]) as f:
+        with open(filepath) as f:
             return f.readlines()
     except IOError:
-        print("There is no such file.")
+        print(f"There is no file named {filepath} .")
         exit()
 
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filepaths', metavar='filepaths', nargs='+', help='list of data filepaths to be processed')
+    parser.add_argument('--workers', type=int, default=1, help='number of processes utilized for bruteforce method')
+    return parser.parse_args()
 
 def main():
-    fs_problem = FSProblem(get_file_content())
-    print(fs_problem)
+    args = parse_arguments()
+    print(args)
+    for path in args.filepaths:
+        fs_problem = FSProblem(get_file_content(path))
+        print(fs_problem)
 
-    t = Timer()
-    t.start()
-    c_max, optimal_order = fs_problem.bruteforce()
-    t.stop()
-    
-    jackson_order = fs_problem.jackson2()
-    print("Jackson order is: ", jackson_order)
+        t = Timer()
+        t.start()
+        c_max, optimal_order = fs_problem.bruteforce(args.workers)
+        t.stop()
+        
+        jackson_order = fs_problem.jackson2()
+        print("Jackson order is: ", jackson_order)
 
-    schedule = fs_problem.get_machines_schedule(optimal_order)
-    fs_problem.display_gantt_chart(schedule, optimal_order)
-
+        schedule = fs_problem.get_machines_schedule(optimal_order)
+        fs_problem.display_gantt_chart(schedule, optimal_order)
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("No filename specified.")
-    else:
-        main()
+    main()
