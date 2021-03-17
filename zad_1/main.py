@@ -72,7 +72,7 @@ class FSProblem:
         return machines_schedule[-1][-1][-1]  # last machine, last row, endtime
 
     def jackson2(self):
-        jobs = self.jobs
+        jobs = list(self.jobs)
         jackson2_order = [-1] * len(jobs)
         front = 0
         back = len(jobs) - 1
@@ -162,7 +162,7 @@ def main():
     t.start()
     c_max, optimal_order = fs_problem.bruteforce()
     t.stop()
-
+    
     jackson_order = fs_problem.jackson2()
     print("Jackson order is: ", jackson_order)
 
