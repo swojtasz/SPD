@@ -71,9 +71,33 @@ class FSProblem:
         machines_schedule = self.get_machines_schedule(order)
         return machines_schedule[-1][-1][-1]  # last machine, last row, endtime
 
-    def jackson2(self):
+    def jackson(self):
         jobs = list(self.jobs)
-        jackson2_order = [-1] * len(jobs)
+
+        if self.machines_count > 2:
+            i = 0
+            mid = int(self.machines_count / 2)
+            for job in jobs:
+                machine_time1 = 0
+                machine_time2 = 0
+                machine1_it = 0
+                machine2_it = int(self.machines_count / 2)
+
+                while machine1_it <= mid:
+                    machine_time1 = machine_time1 + job[machine1_it]
+                    machine_time2 = machine_time2 + job[machine2_it]
+                    machine1_it += 1
+                    machine2_it += 1
+
+                job = job[:2]
+
+                job[0] = machine_time1
+                job[1] = machine_time2
+
+                jobs[i] = job
+                i = i + 1
+
+        jackson_order = [-1] * len(jobs)
         front = 0
         back = len(jobs) - 1
         for x in range(len(jobs)):
@@ -87,54 +111,14 @@ class FSProblem:
                         i_best = i
                         j_best = j
             if j_best == 1:
-                jackson2_order[back] = i_best
+                jackson_order[back] = i_best
                 back = back - 1
                 jobs[i_best] = [10000, 10000]
             if j_best == 0:
-                jackson2_order[front] = i_best
+                jackson_order[front] = i_best
                 front = front + 1
                 jobs[i_best] = [10000, 10000]
-        return jackson2_order
-
-    def jackson3(self):
-        jobs = list(self.jobs)
-        i = 0
-        for job in jobs:
-
-            machine_time1 = job[0] + job[1]
-            machine_time2 = job[1] + job[2]
-
-            job = job[:2]
-
-            job[0] = machine_time1
-            job[1] = machine_time2
-
-            jobs[i] = job
-            i = i + 1
-
-        jackson3_order = [-1] * len(jobs)
-        front = 0
-        back = len(jobs) - 1
-        for x in range(len(jobs)):
-            lowest_value = 10000
-            i_best = -1
-            j_best = -1
-            for i in range(len(jobs)):
-                for j in range(len(jobs[i])):
-                    if jobs[i][j] < lowest_value:
-                        lowest_value = jobs[i][j]
-                        i_best = i
-                        j_best = j
-            if j_best == 1:
-                jackson3_order[back] = i_best
-                back = back - 1
-                jobs[i_best] = [10000, 10000]
-            if j_best == 0:
-                jackson3_order[front] = i_best
-                front = front + 1
-                jobs[i_best] = [10000, 10000]
-        return jackson3_order
-
+        return jackson_order
 
     def display_gantt_chart(self, machines_schedule, order):
         rect_height = 5
@@ -193,11 +177,13 @@ def get_file_content(filepath):
         print(f"There is no file named {filepath} .")
         exit()
 
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('filepaths', metavar='filepaths', nargs='+', help='list of data filepaths to be processed')
     parser.add_argument('--workers', type=int, default=1, help='number of processes utilized for bruteforce method')
     return parser.parse_args()
+
 
 def main():
     args = parse_arguments()
@@ -210,12 +196,13 @@ def main():
         t.start()
         c_max, optimal_order = fs_problem.bruteforce(args.workers)
         t.stop()
-        
-        jackson_order = fs_problem.jackson3()
+
+        jackson_order = fs_problem.jackson()
         print("Jackson order is: ", jackson_order)
 
         schedule = fs_problem.get_machines_schedule(optimal_order)
         fs_problem.display_gantt_chart(schedule, optimal_order)
+
 
 if __name__ == "__main__":
     main()
