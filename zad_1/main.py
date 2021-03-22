@@ -18,7 +18,7 @@ class FSProblem:
     def __str__(self):
         text = '{0} {1}\n'.format("dataset", self.name)
         text += '{0:<8} {1}\n'.format("jobs", "machines times")
-        text += '-----------------------\n'
+        text += '- - - - - - - - - - - -\n'
         for i, job in enumerate(self.jobs):
             text += '{0:<8} {1}\n'.format(i, job)
         return text
@@ -62,16 +62,14 @@ class FSProblem:
         permu = list(itertools.permutations(list(range(self.jobs_count))))
         with mp.Pool(workers) as pool:
             results = np.array(pool.map(self.bruteforce_worker, permu))
-        c_max = np.min(results)
         optimal_order = permu[np.argmin(results)]
-        print("Best time equals: ", c_max, "For order: ", optimal_order)
-        return c_max, optimal_order
+        return list(optimal_order)
 
     def bruteforce_worker(self, order):
         machines_schedule = self.get_machines_schedule(order)
         return machines_schedule[-1][-1][-1]  # last machine, last row, endtime
 
-    def jackson(self):
+    def johnson(self):
         jobs = list(self.jobs)
 
         if self.machines_count > 2:
@@ -81,7 +79,7 @@ class FSProblem:
                 machine_time1 = 0
                 machine_time2 = 0
                 machine1_it = 0
-                machine2_it = int(self.machines_count / 2)
+                machine2_it = mid
 
                 while machine1_it <= mid:
                     machine_time1 = machine_time1 + job[machine1_it]
@@ -90,14 +88,12 @@ class FSProblem:
                     machine2_it += 1
 
                 job = job[:2]
-
                 job[0] = machine_time1
                 job[1] = machine_time2
-
                 jobs[i] = job
                 i = i + 1
 
-        jackson_order = [-1] * len(jobs)
+        johnson_order = [-1] * len(jobs)
         front = 0
         back = len(jobs) - 1
         for x in range(len(jobs)):
@@ -111,14 +107,14 @@ class FSProblem:
                         i_best = i
                         j_best = j
             if j_best == 1:
-                jackson_order[back] = i_best
+                johnson_order[back] = i_best
                 back = back - 1
                 jobs[i_best] = [10000, 10000]
             if j_best == 0:
-                jackson_order[front] = i_best
+                johnson_order[front] = i_best
                 front = front + 1
                 jobs[i_best] = [10000, 10000]
-        return jackson_order
+        return johnson_order
 
     def display_gantt_chart(self, machines_schedule, order):
         rect_height = 5
@@ -163,10 +159,12 @@ class Timer:
     def start(self):
         self.start_time = time.perf_counter()
 
-    def stop(self):
+    def stop(self, verbose=False):
         elapsed_time = time.perf_counter() - self.start_time
         self.start_time = 0
-        print(f"Elapsed time: {elapsed_time:0.6f} seconds")
+        if verbose:
+            print(f"Elapsed time: {elapsed_time:0.6f} seconds")
+        return elapsed_time
 
 
 def get_file_content(filepath):
@@ -177,31 +175,38 @@ def get_file_content(filepath):
         print(f"There is no file named {filepath} .")
         exit()
 
-
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('filepaths', metavar='filepaths', nargs='+', help='list of data filepaths to be processed')
     parser.add_argument('--workers', type=int, default=1, help='number of processes utilized for bruteforce method')
     return parser.parse_args()
 
-
 def main():
     args = parse_arguments()
-    print(args)
+    t = Timer()
     for path in args.filepaths:
         fs_problem = FSProblem(get_file_content(path))
         print(fs_problem)
 
-        t = Timer()
         t.start()
-        c_max, optimal_order = fs_problem.bruteforce(args.workers)
-        t.stop()
+        optimal_order = fs_problem.bruteforce(args.workers)
+        optimal_exec_time = t.stop()
+        optimal_schedule = fs_problem.get_machines_schedule(optimal_order)
+        optimal_c_max = optimal_schedule[-1][-1][-1]
 
-        jackson_order = fs_problem.jackson()
-        print("Jackson order is: ", jackson_order)
+        t.start()
+        johnson_order = fs_problem.johnson()
+        johnson_exec_time = t.stop()
+        johnson_schedule = fs_problem.get_machines_schedule(johnson_order)
+        johnson_c_max = johnson_schedule[-1][-1][-1]
+        
+        print('{0:<20}{1:<10}{2:<14}{3}'.format("algorithm/data", "c_max", "exec time", "order"))
+        print(*['-']*(10+5+7+3*int(len(max(optimal_order,johnson_order))/2)))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Bruteforce", optimal_c_max, optimal_exec_time, optimal_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Johnson", johnson_c_max, johnson_exec_time, johnson_order))
 
-        schedule = fs_problem.get_machines_schedule(optimal_order)
-        fs_problem.display_gantt_chart(schedule, optimal_order)
+        fs_problem.display_gantt_chart(optimal_schedule, optimal_order)
+        fs_problem.display_gantt_chart(johnson_schedule, johnson_order)
 
 
 if __name__ == "__main__":
