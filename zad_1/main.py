@@ -83,8 +83,10 @@ class FSProblem:
 
                 while machine1_it <= mid:
                     machine_time1 = machine_time1 + job[machine1_it]
-                    machine_time2 = machine_time2 + job[machine2_it]
                     machine1_it += 1
+
+                while machine2_it < self.machines_count:
+                    machine_time2 = machine_time2 + job[machine2_it]
                     machine2_it += 1
 
                 job = job[:2]
