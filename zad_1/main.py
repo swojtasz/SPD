@@ -4,20 +4,20 @@ import argparse
 import multiprocessing as mp
 import numpy as np
 import matplotlib.pyplot as plt
-
+import math
 
 class FSProblem:
     def __init__(self, lines):
-        self.name = lines[0].rstrip()
-        self.jobs_count, self.machines_count = (int(val) for val in lines[1].split())
+      #  self.name = lines[0].rstrip()
+        self.jobs_count, self.machines_count = (int(val) for val in lines[0].split())
         self.jobs = []
-        for job in lines[2:2 + self.jobs_count]:
+        for job in lines[1:2 + self.jobs_count]:
             machines_times = [int(val) for val in job.split()]
             self.jobs.append(machines_times)
 
     def __str__(self):
-        text = '{0} {1}\n'.format("dataset", self.name)
-        text += '{0:<8} {1}\n'.format("jobs", "machines times")
+   #     text = '{0} {1}\n'.format("dataset", self.name)
+        text = '{0:<8} {1}\n'.format("jobs", "machines times")
         text += '- - - - - - - - - - - -\n'
         for i, job in enumerate(self.jobs):
             text += '{0:<8} {1}\n'.format(i, job)
@@ -177,38 +177,100 @@ def get_file_content(filepath):
         print(f"There is no file named {filepath} .")
         exit()
 
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('filepaths', metavar='filepaths', nargs='+', help='list of data filepaths to be processed')
     parser.add_argument('--workers', type=int, default=1, help='number of processes utilized for bruteforce method')
     return parser.parse_args()
 
+
+def neh_basic(path):
+    fs_problem = FSProblem(get_file_content(path))
+    jobs_matrix = fs_problem.jobs
+
+    # get total time of jobs on all machines
+    jobs_time_sum = [0]*fs_problem.jobs_count
+    for i in range(fs_problem.jobs_count):
+        for j in range(fs_problem.machines_count):
+            jobs_time_sum[i] += jobs_matrix[i][j]
+
+    # get order of jobs to insert
+    job_order = np.argsort(jobs_time_sum)[::-1]
+    list_of_elements = [job_order[0]]
+    cmax = -1
+
+    # main loop, i iterates over elements to insert
+    for i in range(0, len(job_order)):
+        best_local_cmax = math.inf
+        looked_x = -1
+
+        # x iterates over possible places to insert
+        for x in range(0, len(list_of_elements)+1):
+            # inside loop all operations on a copy
+            list_copy = list_of_elements.copy()
+            # skip first time
+            if i > 0:
+                list_copy.insert(x, job_order[i])
+
+            # create new FSProblem, in format same as loaded from file
+            foo_lines = []
+            foo_lines.append([len(list_copy), fs_problem.machines_count])
+            foo_lines[0] = " ".join(str(r) for r in foo_lines[0])
+            for b in range(0, len(list_copy)):
+                foo_lines.append([])
+                for a in range(fs_problem.machines_count):
+                    foo_lines[b+1].append(fs_problem.jobs[list_copy[b]][a])
+                foo_lines[b+1] = " ".join(str(f) for f in foo_lines[b+1])
+            flowshop = FSProblem(foo_lines)
+
+            # get cmax of this instance
+            schdl=[]
+            for s in range(len(list_copy)):
+                schdl.append(s)
+            schedule = flowshop.get_machines_schedule(schdl)
+            local_cmax = schedule[-1][-1][-1]
+
+            # if it is better, remember
+            if local_cmax < best_local_cmax:
+                best_local_cmax = local_cmax
+                cmax = best_local_cmax
+                looked_x = x
+
+        # insert element in a place where cmax best best
+        if i > 0:
+            list_of_elements.insert(looked_x, job_order[i])
+
+    return list_of_elements, cmax
+
+
 def main():
     args = parse_arguments()
     t = Timer()
     for path in args.filepaths:
-        fs_problem = FSProblem(get_file_content(path))
-        print(fs_problem)
+        order, cmax = neh_basic(path)
+        print(order)
+        print(cmax)
 
-        t.start()
-        optimal_order = fs_problem.bruteforce(args.workers)
-        optimal_exec_time = t.stop()
-        optimal_schedule = fs_problem.get_machines_schedule(optimal_order)
-        optimal_c_max = optimal_schedule[-1][-1][-1]
+        # t.start()
+        # optimal_order = fs_problem.bruteforce(args.workers)
+        # optimal_exec_time = t.stop()
+        # optimal_schedule = fs_problem.get_machines_schedule(optimal_order)
+        # optimal_c_max = optimal_schedule[-1][-1][-1]
 
-        t.start()
-        johnson_order = fs_problem.johnson()
-        johnson_exec_time = t.stop()
-        johnson_schedule = fs_problem.get_machines_schedule(johnson_order)
-        johnson_c_max = johnson_schedule[-1][-1][-1]
-        
-        print('{0:<20}{1:<10}{2:<14}{3}'.format("algorithm/data", "c_max", "exec time", "order"))
-        print(*['-']*(10+5+7+3*int(len(max(optimal_order,johnson_order))/2)))
-        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Bruteforce", optimal_c_max, optimal_exec_time, optimal_order))
-        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Johnson", johnson_c_max, johnson_exec_time, johnson_order))
+        # t.start()
+        # johnson_order = fs_problem.johnson()
+        # johnson_exec_time = t.stop()
+        # johnson_schedule = fs_problem.get_machines_schedule(johnson_order)
+        # johnson_c_max = johnson_schedule[-1][-1][-1]
 
-        fs_problem.display_gantt_chart(optimal_schedule, optimal_order)
-        fs_problem.display_gantt_chart(johnson_schedule, johnson_order)
+        # print('{0:<20}{1:<10}{2:<14}{3}'.format("algorithm/data", "c_max", "exec time", "order"))
+        # print(*['-'] * (10 + 5 + 7 + 3 * int(len(max(optimal_order, johnson_order)) / 2)))
+        # print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Bruteforce", optimal_c_max, optimal_exec_time, optimal_order))
+        # print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Johnson", johnson_c_max, johnson_exec_time, johnson_order))
+
+        # fs_problem.display_gantt_chart(optimal_schedule, optimal_order)
+        # fs_problem.display_gantt_chart(johnson_schedule, johnson_order)
 
 
 if __name__ == "__main__":
