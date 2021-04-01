@@ -11,9 +11,12 @@ class FSProblem:
       #  self.name = lines[0].rstrip()
         self.jobs_count, self.machines_count = (int(val) for val in lines[0].split())
         self.jobs = []
-        for job in lines[1:2 + self.jobs_count]:
+        for job in lines[1:1 + self.jobs_count]:
             machines_times = [int(val) for val in job.split()]
             self.jobs.append(machines_times)
+        if len(lines) > 1 + self.jobs_count and lines[1 + self.jobs_count + 1].rstrip() == "neh:":
+            self.neh_correct_c_max = int(lines[1 + self.jobs_count + 2])
+            self.neh_correct_order = [int(val) for val in lines[1 + self.jobs_count + 3].split()]
 
     def __str__(self):
    #     text = '{0} {1}\n'.format("dataset", self.name)
@@ -146,6 +149,19 @@ class FSProblem:
                         va='center',
                         color='black')
         plt.show()
+    
+    def check_answer(self, algo_type, order, c_max):
+        if algo_type == "neh":
+            if self.neh_correct_c_max == int(c_max):
+                print("Correct NEH c_max.")
+            else:
+                print("Incorrect NEH c_max. Correct:", self.neh_correct_c_max)
+
+            for i in range(len(order)):
+                if not self.neh_correct_order[i] == order[i]+1:
+                    print("Incorrect NEH order. Correct:", self.neh_correct_order, end="\n\n")
+                    return
+            print("Correct NEH order.", end="\n\n")
 
 
 class Operation:
@@ -181,19 +197,18 @@ def get_file_content(filepath):
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('filepaths', metavar='filepaths', nargs='+', help='list of data filepaths to be processed')
+    parser.add_argument('--brutal', nargs='?', const=True, default=False, help='number of processes utilized for bruteforce method')
     parser.add_argument('--workers', type=int, default=1, help='number of processes utilized for bruteforce method')
     return parser.parse_args()
 
 
-def neh_basic(path):
-    fs_problem = FSProblem(get_file_content(path))
-    jobs_matrix = fs_problem.jobs
+def neh_basic(fs_problem):
 
     # get total time of jobs on all machines
     jobs_time_sum = [0]*fs_problem.jobs_count
     for i in range(fs_problem.jobs_count):
         for j in range(fs_problem.machines_count):
-            jobs_time_sum[i] += jobs_matrix[i][j]
+            jobs_time_sum[i] += fs_problem.jobs[i][j]
 
     # get order of jobs to insert
     job_order = np.argsort(jobs_time_sum)[::-1]
@@ -248,26 +263,34 @@ def main():
     args = parse_arguments()
     t = Timer()
     for path in args.filepaths:
-        order, cmax = neh_basic(path)
-        print(order)
-        print(cmax)
+        fs_problem = FSProblem(get_file_content(path))
+        print(fs_problem)
 
-        # t.start()
-        # optimal_order = fs_problem.bruteforce(args.workers)
-        # optimal_exec_time = t.stop()
-        # optimal_schedule = fs_problem.get_machines_schedule(optimal_order)
-        # optimal_c_max = optimal_schedule[-1][-1][-1]
+        if args.brutal:
+            t.start()
+            optimal_order = fs_problem.bruteforce(args.workers)
+            optimal_exec_time = t.stop()
+            optimal_schedule = fs_problem.get_machines_schedule(optimal_order)
+            optimal_c_max = optimal_schedule[-1][-1][-1]
 
-        # t.start()
-        # johnson_order = fs_problem.johnson()
-        # johnson_exec_time = t.stop()
-        # johnson_schedule = fs_problem.get_machines_schedule(johnson_order)
-        # johnson_c_max = johnson_schedule[-1][-1][-1]
+        t.start()
+        johnson_order = fs_problem.johnson()
+        johnson_exec_time = t.stop()
+        johnson_schedule = fs_problem.get_machines_schedule(johnson_order)
+        johnson_c_max = johnson_schedule[-1][-1][-1]
 
-        # print('{0:<20}{1:<10}{2:<14}{3}'.format("algorithm/data", "c_max", "exec time", "order"))
-        # print(*['-'] * (10 + 5 + 7 + 3 * int(len(max(optimal_order, johnson_order)) / 2)))
-        # print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Bruteforce", optimal_c_max, optimal_exec_time, optimal_order))
-        # print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Johnson", johnson_c_max, johnson_exec_time, johnson_order))
+        t.start()
+        neh_order, neh_c_max = neh_basic(fs_problem)
+        neh_exec_time = t.stop()
+        fs_problem.check_answer("neh", neh_order, neh_c_max)
+
+        print('{0:<20}{1:<10}{2:<14}{3}'.format("algorithm/data", "c_max", "exec time", "order"))
+        print(*['-'] * 50)
+        if args.brutal:
+            print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Bruteforce", optimal_c_max, optimal_exec_time, optimal_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Johnson", johnson_c_max, johnson_exec_time, johnson_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH", neh_c_max, neh_exec_time, neh_order))
+
 
         # fs_problem.display_gantt_chart(optimal_schedule, optimal_order)
         # fs_problem.display_gantt_chart(johnson_schedule, johnson_order)
