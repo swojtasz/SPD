@@ -213,7 +213,7 @@ def neh_basic(fs_problem):
             jobs_time_sum[i] += fs_problem.jobs[i][j]
 
     # get order of jobs to insert
-    job_order = np.argsort(jobs_time_sum)[::-1]
+    job_order = len(jobs_time_sum) - 1 - np.argsort(jobs_time_sum[::-1], kind='stable')[::-1]
     list_of_elements = [job_order[0]]
     cmax = -1
 
