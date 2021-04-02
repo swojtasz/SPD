@@ -215,11 +215,10 @@ def neh_basic(fs_problem):
     # get order of jobs to insert
     job_order = len(jobs_time_sum) - 1 - np.argsort(jobs_time_sum[::-1], kind='stable')[::-1]
     list_of_elements = [job_order[0]]
-    cmax = -1
 
     # main loop, i iterates over elements to insert
     for i in range(0, len(job_order)):
-        best_local_cmax = math.inf
+        cmax = math.inf
         looked_x = -1
 
         # x iterates over possible places to insert
@@ -249,9 +248,8 @@ def neh_basic(fs_problem):
             local_cmax = schedule[-1][-1][-1]
 
             # if it is better, remember
-            if local_cmax < best_local_cmax:
-                best_local_cmax = local_cmax
-                cmax = best_local_cmax
+            if local_cmax < cmax:
+                cmax = local_cmax
                 looked_x = x
 
         # insert element in a place where cmax best best
@@ -284,6 +282,7 @@ def main():
         t.start()
         neh_order, neh_c_max = neh_basic(fs_problem)
         neh_exec_time = t.stop()
+        neh_schedule = fs_problem.get_machines_schedule(neh_order)
         fs_problem.check_answer("neh", neh_order, neh_c_max)
 
         print('{0:<20}{1:<10}{2:<14}{3}'.format("algorithm/data", "c_max", "exec time", "order"))
@@ -296,6 +295,8 @@ def main():
 
         # fs_problem.display_gantt_chart(optimal_schedule, optimal_order)
         # fs_problem.display_gantt_chart(johnson_schedule, johnson_order)
+        # fs_problem.display_gantt_chart(neh_schedule, neh_order)
+
 
 
 if __name__ == "__main__":
