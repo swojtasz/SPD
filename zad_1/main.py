@@ -11,12 +11,14 @@ class FSProblem:
       #  self.name = lines[0].rstrip()
         self.jobs_count, self.machines_count = (int(val) for val in lines[0].split())
         self.jobs = []
+        self.neh_correct_order = []
         for job in lines[1:1 + self.jobs_count]:
             machines_times = [int(val) for val in job.split()]
             self.jobs.append(machines_times)
         if len(lines) > 1 + self.jobs_count and lines[1 + self.jobs_count + 1].rstrip() == "neh:":
             self.neh_correct_c_max = int(lines[1 + self.jobs_count + 2])
-            self.neh_correct_order = [int(val) for val in lines[1 + self.jobs_count + 3].split()]
+            for order_line in lines[1 + self.jobs_count + 3:]:
+                self.neh_correct_order += [int(val) for val in order_line.split()]
 
     def __str__(self):
    #     text = '{0} {1}\n'.format("dataset", self.name)
