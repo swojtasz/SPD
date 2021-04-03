@@ -32,7 +32,7 @@ class FSProblem:
         jobs_in_order = []
         for i in range(len(order)):
             jobs_in_order.append(self.jobs[order[i]])
-        matrix = np.zeros(shape=(self.jobs_count+1, self.machines_count+1))
+        matrix = np.zeros(shape=(len(jobs_in_order)+1, self.machines_count+1))
         for i, val in enumerate(matrix):
             if i == 0:
                 continue
@@ -51,13 +51,13 @@ class FSProblem:
         print(jobs_in_order)
         i, j = endings_matrix.shape[0]-1 , endings_matrix.shape[1]-1
         critical_path = []
-        critical_path.insert(0, (order[i-1], j-1, jobs_in_order[i-1][j-1]))
+        critical_path.insert(0, (i-1, j-1, jobs_in_order[i-1][j-1]))
         while i != 1 or j != 1:
             if endings_matrix[i][j-1] > endings_matrix[i-1][j]:
-                critical_path.insert(0, (order[i-1], j-1-1, jobs_in_order[i-1][j-1-1]))
+                critical_path.insert(0, (i-1, j-1-1, jobs_in_order[i-1][j-1-1]))
                 j -= 1
             else:
-                critical_path.insert(0, (order[i-1-1], j-1, jobs_in_order[i-1-1][j-1]))
+                critical_path.insert(0, (i-1-1, j-1, jobs_in_order[i-1-1][j-1]))
                 i -= 1
         return critical_path
 
@@ -302,6 +302,9 @@ def main():
     for path in args.filepaths:
         fs_problem = FSProblem(get_file_content(path))
         print(fs_problem)
+        m = fs_problem.get_endings_matrix([0,3,2,1])
+        print(fs_problem.get_critical_path(m, [0,3,2,1]))
+
 
         if args.brutal:
             t.start()
