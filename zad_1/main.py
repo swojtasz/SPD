@@ -28,6 +28,39 @@ class FSProblem:
             text += '{0:<8} {1}\n'.format(i, job)
         return text
 
+    def get_endings_matrix(self, order):
+        jobs_in_order = []
+        for i in range(len(order)):
+            jobs_in_order.append(self.jobs[order[i]])
+        matrix = np.zeros(shape=(self.jobs_count+1, self.machines_count+1))
+        for i, val in enumerate(matrix):
+            if i == 0:
+                continue
+            else:
+                for j, val in enumerate(val):
+                    if j == 0:
+                        continue
+                    else:
+                        matrix[i][j] = max(matrix[i-1][j], matrix[i][j-1]) + jobs_in_order[i-1][j-1]
+        return matrix
+
+    def get_critical_path(self, endings_matrix, order):
+        jobs_in_order = []
+        for i in range(len(order)):
+            jobs_in_order.append(self.jobs[order[i]])
+        print(jobs_in_order)
+        i, j = endings_matrix.shape[0]-1 , endings_matrix.shape[1]-1
+        critical_path = []
+        critical_path.insert(0, (order[i-1], j-1, jobs_in_order[i-1][j-1]))
+        while i != 1 or j != 1:
+            if endings_matrix[i][j-1] > endings_matrix[i-1][j]:
+                critical_path.insert(0, (order[i-1], j-1-1, jobs_in_order[i-1][j-1-1]))
+                j -= 1
+            else:
+                critical_path.insert(0, (order[i-1-1], j-1, jobs_in_order[i-1-1][j-1]))
+                i -= 1
+        return critical_path
+
     def get_machines_schedule(self, order):
         jobs_in_order = []
         for i in range(len(order)):
@@ -204,7 +237,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def neh_basic(fs_problem):
+def neh(fs_problem, mod=None):
 
     # get total time of jobs on all machines
     jobs_time_sum = [0]*fs_problem.jobs_count
@@ -247,6 +280,10 @@ def neh_basic(fs_problem):
             schedule = flowshop.get_machines_schedule(schdl)
             local_cmax = schedule[-1][-1][-1]
 
+            if mod == 1:
+                # tutaj chyba implenentacja kroku 5. by poszla dla reguły 1
+                pass 
+
             # if it is better, remember
             if local_cmax < cmax:
                 cmax = local_cmax
@@ -280,10 +317,16 @@ def main():
         johnson_c_max = johnson_schedule[-1][-1][-1]
 
         t.start()
-        neh_order, neh_c_max = neh_basic(fs_problem)
+        neh_order, neh_c_max = neh(fs_problem)
         neh_exec_time = t.stop()
         neh_schedule = fs_problem.get_machines_schedule(neh_order)
         fs_problem.check_answer("neh", neh_order, neh_c_max)
+
+        # t.start()
+        # neh_mod1_order, neh_mod1_c_max = neh(fs_problem, mod=1)
+        # neh_mod1_exec_time = t.stop()
+        # neh_mod1_schedule = fs_problem.get_machines_schedule(neh_mod1_order)
+        # fs_problem.check_answer("neh", neh_mod1_order, neh_mod1_c_max)
 
         print('{0:<20}{1:<10}{2:<14}{3}'.format("algorithm/data", "c_max", "exec time", "order"))
         print(*['-'] * 50)
@@ -291,6 +334,7 @@ def main():
             print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Bruteforce", optimal_c_max, optimal_exec_time, optimal_order))
         print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Johnson", johnson_c_max, johnson_exec_time, johnson_order))
         print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH", neh_c_max, neh_exec_time, neh_order))
+        # print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH MOD 1", neh_mod1_c_max, neh_mod1_exec_time, neh_mod1_order))
 
 
         # fs_problem.display_gantt_chart(optimal_schedule, optimal_order)
