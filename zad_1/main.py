@@ -6,9 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
+
 class FSProblem:
     def __init__(self, lines):
-      #  self.name = lines[0].rstrip()
+        #  self.name = lines[0].rstrip()
         self.jobs_count, self.machines_count = (int(val) for val in lines[0].split())
         self.jobs = []
         self.neh_correct_order = []
@@ -21,7 +22,7 @@ class FSProblem:
                 self.neh_correct_order += [int(val) for val in order_line.split()]
 
     def __str__(self):
-   #     text = '{0} {1}\n'.format("dataset", self.name)
+        #     text = '{0} {1}\n'.format("dataset", self.name)
         text = '{0:<8} {1}\n'.format("jobs", "machines times")
         text += '- - - - - - - - - - - -\n'
         for i, job in enumerate(self.jobs):
@@ -32,7 +33,7 @@ class FSProblem:
         jobs_in_order = []
         for i in range(len(order)):
             jobs_in_order.append(self.jobs[order[i]])
-        matrix = np.zeros(shape=(len(jobs_in_order)+1, self.machines_count+1))
+        matrix = np.zeros(shape=(len(jobs_in_order) + 1, self.machines_count + 1))
         for i, val in enumerate(matrix):
             if i == 0:
                 continue
@@ -41,23 +42,22 @@ class FSProblem:
                     if j == 0:
                         continue
                     else:
-                        matrix[i][j] = max(matrix[i-1][j], matrix[i][j-1]) + jobs_in_order[i-1][j-1]
+                        matrix[i][j] = max(matrix[i - 1][j], matrix[i][j - 1]) + jobs_in_order[i - 1][j - 1]
         return matrix
 
     def get_critical_path(self, endings_matrix, order):
         jobs_in_order = []
         for i in range(len(order)):
             jobs_in_order.append(self.jobs[order[i]])
-        print(jobs_in_order)
-        i, j = endings_matrix.shape[0]-1 , endings_matrix.shape[1]-1
+        i, j = endings_matrix.shape[0] - 1, endings_matrix.shape[1] - 1
         critical_path = []
-        critical_path.insert(0, (i-1, j-1, jobs_in_order[i-1][j-1]))
+        critical_path.insert(0, (i - 1, j - 1, jobs_in_order[i - 1][j - 1]))
         while i != 1 or j != 1:
-            if endings_matrix[i][j-1] > endings_matrix[i-1][j]:
-                critical_path.insert(0, (i-1, j-1-1, jobs_in_order[i-1][j-1-1]))
+            if endings_matrix[i][j - 1] > endings_matrix[i - 1][j]:
+                critical_path.insert(0, (i - 1, j - 1 - 1, jobs_in_order[i - 1][j - 1 - 1]))
                 j -= 1
             else:
-                critical_path.insert(0, (i-1-1, j-1, jobs_in_order[i-1-1][j-1]))
+                critical_path.insert(0, (i - 1 - 1, j - 1, jobs_in_order[i - 1 - 1][j - 1]))
                 i -= 1
         return critical_path
 
@@ -184,7 +184,7 @@ class FSProblem:
                         va='center',
                         color='black')
         plt.show()
-    
+
     def check_answer(self, algo_type, order, c_max):
         if algo_type == "neh":
             if self.neh_correct_c_max == int(c_max):
@@ -193,10 +193,21 @@ class FSProblem:
                 print("Incorrect NEH c_max. Correct:", self.neh_correct_c_max)
 
             for i in range(len(order)):
-                if not self.neh_correct_order[i] == order[i]+1:
+                if not self.neh_correct_order[i] == order[i] + 1:
                     print("Incorrect NEH order. Correct:", self.neh_correct_order, end="\n\n")
                     return
             print("Correct NEH order.", end="\n\n")
+
+    def createFSProblem(self, order):
+        foo_lines = []
+        foo_lines.append([len(order), self.machines_count])
+        foo_lines[0] = " ".join(str(r) for r in foo_lines[0])
+        for b in range(0, len(order)):
+            foo_lines.append([])
+            for a in range(self.machines_count):
+                foo_lines[b + 1].append(self.jobs[order[b]][a])
+            foo_lines[b + 1] = " ".join(str(f) for f in foo_lines[b + 1])
+        return FSProblem(foo_lines)
 
 
 class Operation:
@@ -232,15 +243,15 @@ def get_file_content(filepath):
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('filepaths', metavar='filepaths', nargs='+', help='list of data filepaths to be processed')
-    parser.add_argument('--brutal', nargs='?', const=True, default=False, help='number of processes utilized for bruteforce method')
+    parser.add_argument('--brutal', nargs='?', const=True, default=False,
+                        help='number of processes utilized for bruteforce method')
     parser.add_argument('--workers', type=int, default=1, help='number of processes utilized for bruteforce method')
     return parser.parse_args()
 
 
 def neh(fs_problem, mod=None):
-
     # get total time of jobs on all machines
-    jobs_time_sum = [0]*fs_problem.jobs_count
+    jobs_time_sum = [0] * fs_problem.jobs_count
     for i in range(fs_problem.jobs_count):
         for j in range(fs_problem.machines_count):
             jobs_time_sum[i] += fs_problem.jobs[i][j]
@@ -255,7 +266,7 @@ def neh(fs_problem, mod=None):
         looked_x = -1
 
         # x iterates over possible places to insert
-        for x in range(0, len(list_of_elements)+1):
+        for x in range(0, len(list_of_elements) + 1):
             # inside loop all operations on a copy
             list_copy = list_of_elements.copy()
             # skip first time
@@ -263,26 +274,14 @@ def neh(fs_problem, mod=None):
                 list_copy.insert(x, job_order[i])
 
             # create new FSProblem, in format same as loaded from file
-            foo_lines = []
-            foo_lines.append([len(list_copy), fs_problem.machines_count])
-            foo_lines[0] = " ".join(str(r) for r in foo_lines[0])
-            for b in range(0, len(list_copy)):
-                foo_lines.append([])
-                for a in range(fs_problem.machines_count):
-                    foo_lines[b+1].append(fs_problem.jobs[list_copy[b]][a])
-                foo_lines[b+1] = " ".join(str(f) for f in foo_lines[b+1])
-            flowshop = FSProblem(foo_lines)
+            flowshop = fs_problem.createFSProblem(list_copy)
 
             # get cmax of this instance
-            schdl=[]
+            schdl = []
             for s in range(len(list_copy)):
                 schdl.append(s)
             schedule = flowshop.get_machines_schedule(schdl)
             local_cmax = schedule[-1][-1][-1]
-
-            if mod == 1:
-                # tutaj chyba implenentacja kroku 5. by poszla dla reguły 1
-                pass 
 
             # if it is better, remember
             if local_cmax < cmax:
@@ -293,6 +292,59 @@ def neh(fs_problem, mod=None):
         if i > 0:
             list_of_elements.insert(looked_x, job_order[i])
 
+        if i > 0:
+            if mod == 1:
+                cmax_mod = math.inf
+
+                critical_path_mod = fs_problem.get_critical_path(fs_problem.get_endings_matrix(list_of_elements),
+                                                                 list_of_elements)
+                mod_time = 0
+
+                critical_path = [list(ele) for ele in critical_path_mod]
+
+                index = 0
+                for cp in critical_path:
+                    if index != cp[0]:
+                        index += 1
+                    cp[0] = list_of_elements[index]
+
+                for paths in critical_path:
+                    if mod_time < paths[2]:
+                        mod_time = paths[2]
+                        mod_job_number = paths[0]
+
+                poppedElement = -1
+
+                if mod_job_number != list_of_elements[looked_x]:
+                    for y in range(len(list_of_elements)):
+                        if list_of_elements[y] == mod_job_number:
+                            poppedElement = list_of_elements.pop(y)
+                            break
+
+                    # x iterates over possible places to insert
+                    for x in range(0, len(list_of_elements) + 1):
+                        list_copy_mod = list_of_elements.copy()
+                        list_copy_mod.insert(x, poppedElement)
+
+                        # create new FSProblem, in format same as loaded from file
+                        flowshop = fs_problem.createFSProblem(list_copy_mod)
+
+                        # get cmax of this instance
+                        schdl = []
+                        for s in range(len(list_copy_mod)):
+                            schdl.append(s)
+                        schedule = flowshop.get_machines_schedule(schdl)
+                        local_cmax = schedule[-1][-1][-1]
+
+                        # if it is better, remember
+                        if local_cmax < cmax_mod:
+                            cmax_mod = local_cmax
+                            looked_x = x
+
+                    # insert element in a place where cmax best best
+                    if i > 0:
+                        list_of_elements.insert(looked_x, poppedElement)
+
     return list_of_elements, cmax
 
 
@@ -301,49 +353,46 @@ def main():
     t = Timer()
     for path in args.filepaths:
         fs_problem = FSProblem(get_file_content(path))
-        print(fs_problem)
-        m = fs_problem.get_endings_matrix([0,3,2,1])
-        print(fs_problem.get_critical_path(m, [0,3,2,1]))
+        # print(fs_problem)
+        # m = fs_problem.get_endings_matrix([0,3,2,1])
+        # print(fs_problem.get_critical_path(m, [0,3,2,1]))
 
-
-        if args.brutal:
-            t.start()
-            optimal_order = fs_problem.bruteforce(args.workers)
-            optimal_exec_time = t.stop()
-            optimal_schedule = fs_problem.get_machines_schedule(optimal_order)
-            optimal_c_max = optimal_schedule[-1][-1][-1]
-
-        t.start()
-        johnson_order = fs_problem.johnson()
-        johnson_exec_time = t.stop()
-        johnson_schedule = fs_problem.get_machines_schedule(johnson_order)
-        johnson_c_max = johnson_schedule[-1][-1][-1]
-
+        # if args.brutal:
+        #     t.start()
+        #     optimal_order = fs_problem.bruteforce(args.workers)
+        #     optimal_exec_time = t.stop()
+        #     optimal_schedule = fs_problem.get_machines_schedule(optimal_order)
+        #     optimal_c_max = optimal_schedule[-1][-1][-1]
+        #
+        # t.start()
+        # johnson_order = fs_problem.johnson()
+        # johnson_exec_time = t.stop()
+        # johnson_schedule = fs_problem.get_machines_schedule(johnson_order)
+        # johnson_c_max = johnson_schedule[-1][-1][-1]
+        #
         t.start()
         neh_order, neh_c_max = neh(fs_problem)
         neh_exec_time = t.stop()
         neh_schedule = fs_problem.get_machines_schedule(neh_order)
         fs_problem.check_answer("neh", neh_order, neh_c_max)
 
-        # t.start()
-        # neh_mod1_order, neh_mod1_c_max = neh(fs_problem, mod=1)
-        # neh_mod1_exec_time = t.stop()
-        # neh_mod1_schedule = fs_problem.get_machines_schedule(neh_mod1_order)
-        # fs_problem.check_answer("neh", neh_mod1_order, neh_mod1_c_max)
+        t.start()
+        neh_mod1_order, neh_mod1_c_max = neh(fs_problem, mod=1)
+        neh_mod1_exec_time = t.stop()
+        neh_mod1_schedule = fs_problem.get_machines_schedule(neh_mod1_order)
+        fs_problem.check_answer("neh", neh_mod1_order, neh_mod1_c_max)
 
         print('{0:<20}{1:<10}{2:<14}{3}'.format("algorithm/data", "c_max", "exec time", "order"))
         print(*['-'] * 50)
-        if args.brutal:
-            print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Bruteforce", optimal_c_max, optimal_exec_time, optimal_order))
-        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Johnson", johnson_c_max, johnson_exec_time, johnson_order))
+        # if args.brutal:
+        # print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Bruteforce", optimal_c_max, optimal_exec_time, optimal_order))
+        # print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Johnson", johnson_c_max, johnson_exec_time, johnson_order))
         print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH", neh_c_max, neh_exec_time, neh_order))
-        # print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH MOD 1", neh_mod1_c_max, neh_mod1_exec_time, neh_mod1_order))
-
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH MOD 1", neh_mod1_c_max, neh_mod1_exec_time, neh_mod1_order))
 
         # fs_problem.display_gantt_chart(optimal_schedule, optimal_order)
         # fs_problem.display_gantt_chart(johnson_schedule, johnson_order)
         # fs_problem.display_gantt_chart(neh_schedule, neh_order)
-
 
 
 if __name__ == "__main__":
