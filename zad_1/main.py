@@ -293,7 +293,7 @@ def neh(fs_problem, mod=None):
             list_of_elements.insert(looked_x, job_order[i])
 
         if i > 0:
-            if mod == 1:
+            if mod in (1, 2, 3):
                 cmax_mod = math.inf
 
                 critical_path_mod = fs_problem.get_critical_path(fs_problem.get_endings_matrix(list_of_elements),
@@ -308,10 +308,33 @@ def neh(fs_problem, mod=None):
                         index += 1
                     cp[0] = list_of_elements[index]
 
-                for paths in critical_path:
-                    if mod_time < paths[2]:
-                        mod_time = paths[2]
-                        mod_job_number = paths[0]
+                if mod == 1:
+                    for paths in critical_path:
+                        if mod_time < paths[2]:
+                            mod_time = paths[2]
+                            mod_job_number = paths[0]
+
+                if mod == 2:
+                    mod_jobs_in_cp = {}
+                    for paths in critical_path:
+                        check = mod_jobs_in_cp.get(paths[0], "Not")
+                        if check == "Not":
+                            mod_jobs_in_cp[paths[0]] = 0
+                        else:
+                            number = paths[2]
+                            mod_jobs_in_cp[paths[0]] = number + 1
+                    mod_job_number = max(mod_jobs_in_cp, key=mod_jobs_in_cp.get)
+
+                if mod == 3:
+                    mod_jobs_in_cp = {}
+                    for paths in critical_path:
+                        check = mod_jobs_in_cp.get(paths[0], "Not")
+                        if check == "Not":
+                            mod_jobs_in_cp[paths[0]] = 0
+                        else:
+                            number = paths[0]
+                            mod_jobs_in_cp[paths[0]] = number + 1
+                    mod_job_number = max(mod_jobs_in_cp, key=mod_jobs_in_cp.get)
 
                 poppedElement = -1
 
@@ -353,23 +376,22 @@ def main():
     t = Timer()
     for path in args.filepaths:
         fs_problem = FSProblem(get_file_content(path))
-        # print(fs_problem)
-        # m = fs_problem.get_endings_matrix([0,3,2,1])
-        # print(fs_problem.get_critical_path(m, [0,3,2,1]))
+        print(fs_problem)
 
-        # if args.brutal:
-        #     t.start()
-        #     optimal_order = fs_problem.bruteforce(args.workers)
-        #     optimal_exec_time = t.stop()
-        #     optimal_schedule = fs_problem.get_machines_schedule(optimal_order)
-        #     optimal_c_max = optimal_schedule[-1][-1][-1]
-        #
-        # t.start()
-        # johnson_order = fs_problem.johnson()
-        # johnson_exec_time = t.stop()
-        # johnson_schedule = fs_problem.get_machines_schedule(johnson_order)
-        # johnson_c_max = johnson_schedule[-1][-1][-1]
-        #
+
+        if args.brutal:
+            t.start()
+            optimal_order = fs_problem.bruteforce(args.workers)
+            optimal_exec_time = t.stop()
+            optimal_schedule = fs_problem.get_machines_schedule(optimal_order)
+            optimal_c_max = optimal_schedule[-1][-1][-1]
+
+        t.start()
+        johnson_order = fs_problem.johnson()
+        johnson_exec_time = t.stop()
+        johnson_schedule = fs_problem.get_machines_schedule(johnson_order)
+        johnson_c_max = johnson_schedule[-1][-1][-1]
+
         t.start()
         neh_order, neh_c_max = neh(fs_problem)
         neh_exec_time = t.stop()
@@ -380,16 +402,29 @@ def main():
         neh_mod1_order, neh_mod1_c_max = neh(fs_problem, mod=1)
         neh_mod1_exec_time = t.stop()
         neh_mod1_schedule = fs_problem.get_machines_schedule(neh_mod1_order)
-        fs_problem.check_answer("neh", neh_mod1_order, neh_mod1_c_max)
+        # fs_problem.check_answer("neh", neh_mod1_order, neh_mod1_c_max)
+
+        t.start()
+        neh_mod2_order, neh_mod2_c_max = neh(fs_problem, mod=2)
+        neh_mod2_exec_time = t.stop()
+        neh_mod3_schedule = fs_problem.get_machines_schedule(neh_mod2_order)
+        # fs_problem.check_answer("neh", neh_mod2_order, neh_mod2_c_max)
+
+        t.start()
+        neh_mod3_order, neh_mod3_c_max = neh(fs_problem, mod=3)
+        neh_mod3_exec_time = t.stop()
+        neh_mod3_schedule = fs_problem.get_machines_schedule(neh_mod3_order)
+        # fs_problem.check_answer("neh", neh_mod3_order, neh_mod3_c_max)
 
         print('{0:<20}{1:<10}{2:<14}{3}'.format("algorithm/data", "c_max", "exec time", "order"))
         print(*['-'] * 50)
-        # if args.brutal:
-        # print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Bruteforce", optimal_c_max, optimal_exec_time, optimal_order))
-        # print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Johnson", johnson_c_max, johnson_exec_time, johnson_order))
+        if args.brutal:
+            print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Bruteforce", optimal_c_max, optimal_exec_time, optimal_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Johnson", johnson_c_max, johnson_exec_time, johnson_order))
         print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH", neh_c_max, neh_exec_time, neh_order))
         print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH MOD 1", neh_mod1_c_max, neh_mod1_exec_time, neh_mod1_order))
-
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH MOD 2", neh_mod2_c_max, neh_mod2_exec_time, neh_mod2_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH MOD 3", neh_mod3_c_max, neh_mod3_exec_time, neh_mod3_order))
         # fs_problem.display_gantt_chart(optimal_schedule, optimal_order)
         # fs_problem.display_gantt_chart(johnson_schedule, johnson_order)
         # fs_problem.display_gantt_chart(neh_schedule, neh_order)
