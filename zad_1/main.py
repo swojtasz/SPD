@@ -314,15 +314,15 @@ def neh(fs_problem, mod=None):
                             mod_time = paths[2]
                             mod_job_number = paths[0]
 
-                if mod == 2:
+                                if mod == 2:
                     mod_jobs_in_cp = {}
                     for paths in critical_path:
                         check = mod_jobs_in_cp.get(paths[0], "Not")
                         if check == "Not":
                             mod_jobs_in_cp[paths[0]] = 0
                         else:
-                            number = paths[2]
-                            mod_jobs_in_cp[paths[0]] = number + 1
+                            number = mod_jobs_in_cp[paths[0]]
+                            mod_jobs_in_cp[paths[0]] = number + paths[2]
                     mod_job_number = max(mod_jobs_in_cp, key=mod_jobs_in_cp.get)
 
                 if mod == 3:
@@ -332,7 +332,7 @@ def neh(fs_problem, mod=None):
                         if check == "Not":
                             mod_jobs_in_cp[paths[0]] = 0
                         else:
-                            number = paths[0]
+                            number = mod_jobs_in_cp[paths[0]]
                             mod_jobs_in_cp[paths[0]] = number + 1
                     mod_job_number = max(mod_jobs_in_cp, key=mod_jobs_in_cp.get)
 
