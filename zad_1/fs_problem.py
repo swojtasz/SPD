@@ -13,6 +13,7 @@ class Operation:
 class FSProblem:
     from johnson import johnson
     from neh import neh
+    from tabu import tabu
     
     def __init__(self, lines):
         #  self.name = lines[0].rstrip()

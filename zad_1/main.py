@@ -1,6 +1,6 @@
 import time
 import argparse
-from fsproblem import FSProblem
+from fs_problem import FSProblem
 
 
 class Timer:
@@ -41,7 +41,6 @@ def main():
         fs_problem = FSProblem(get_file_content(path))
         print(fs_problem)
 
-
         if args.brutal:
             t.start()
             optimal_order = fs_problem.bruteforce(args.workers)
@@ -65,19 +64,23 @@ def main():
         neh_mod1_order, neh_mod1_c_max = fs_problem.neh(mod=1)
         neh_mod1_exec_time = t.stop()
         neh_mod1_schedule = fs_problem.get_machines_schedule(neh_mod1_order)
-        # fs_problem.check_answer("neh", neh_mod1_order, neh_mod1_c_max)
 
         t.start()
         neh_mod2_order, neh_mod2_c_max = fs_problem.neh(mod=2)
         neh_mod2_exec_time = t.stop()
         neh_mod3_schedule = fs_problem.get_machines_schedule(neh_mod2_order)
-        # fs_problem.check_answer("neh", neh_mod2_order, neh_mod2_c_max)
 
         t.start()
         neh_mod3_order, neh_mod3_c_max = fs_problem.neh(mod=3)
         neh_mod3_exec_time = t.stop()
         neh_mod3_schedule = fs_problem.get_machines_schedule(neh_mod3_order)
-        # fs_problem.check_answer("neh", neh_mod3_order, neh_mod3_c_max)
+
+        t.start()
+        # tabu_order, tabu_cmax = fs_problem.tabu(init=[1,2,3], stop=('timeout', 4))
+        tabu_order, tabu_cmax = fs_problem.tabu(init='neh', stop=('iter', 50000))
+        # tabu_order, tabu_cmax = fs_problem.tabu(init='random', stop=('improvement', 1000))
+        tabu_exec_time = t.stop()
+        tabu_schedule = fs_problem.get_machines_schedule(tabu_order)
 
         print('{0:<20}{1:<10}{2:<14}{3}'.format("algorithm/data", "c_max", "exec time", "order"))
         print(*['-'] * 50)
@@ -88,6 +91,8 @@ def main():
         print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH MOD 1", neh_mod1_c_max, neh_mod1_exec_time, neh_mod1_order))
         print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH MOD 2", neh_mod2_c_max, neh_mod2_exec_time, neh_mod2_order))
         print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH MOD 3", neh_mod3_c_max, neh_mod3_exec_time, neh_mod3_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Tabu Search", tabu_cmax, tabu_exec_time, tabu_order))
+
         # fs_problem.display_gantt_chart(optimal_schedule, optimal_order)
         # fs_problem.display_gantt_chart(johnson_schedule, johnson_order)
         # fs_problem.display_gantt_chart(neh_schedule, neh_order)
