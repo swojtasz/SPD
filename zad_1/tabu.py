@@ -18,6 +18,75 @@ stop:
     - ('improvement', number_of_iterations)
 ###'''
 
+
+def inverse(order, neighbourhood_size):
+    candidates = []
+    inverses = []
+    # iterate over number of required neighbours
+    for i in range(neighbourhood_size):
+        # get copy of a given order
+        neighbour = order.copy()
+        left = random.randrange(0, len(neighbour))
+        right = random.randrange(left, len(neighbour))
+        while (right-left < 3) or ([left, right] in inverses):
+            left = random.randrange(0, len(neighbour))
+            right = random.randrange(left, len(neighbour))
+        neighbour[left:right] = neighbour[left:right][::-1]
+        inverses.append([left, right])
+        candidates.append(neighbour)
+    return candidates
+
+
+def swap(order, neighbourhood_size):
+    candidates = []
+    swaps = []
+    # iterate over number of required neighbours
+    for i in range(neighbourhood_size):
+        # get copy of a given order
+        neighbour = order.copy()
+        # pick to numbers to swap
+        x1 = random.randrange(len(neighbour))
+        x2 = random.randrange(len(neighbour))
+        # neighbours need to be different
+        while ([x1, x2] in swaps) or ([x2, x1] in swaps) or (x1 == x2):
+            x1 = random.randrange(len(neighbour))
+            x2 = random.randrange(len(neighbour))
+        swaps.append([x1, x2])
+        # swap two
+        neighbour[x1], neighbour[x2] = neighbour[x2], neighbour[x1]
+        candidates.append(neighbour)
+
+    return candidates
+
+
+def insert(order, neighbourhood_size):
+    candidates = []
+    inserts = []
+    # iterate over number of required neighbours
+    for i in range(neighbourhood_size):
+        neighbour = order.copy()
+        while neighbour == order:
+            # get copy of a given order
+            neighbour_may = order.copy()
+            # pick place and element to insert
+            xplace = random.randrange(len(neighbour_may))
+            xinsert = random.randrange(len(neighbour_may))
+            # neighbours need to be different
+            while [xplace, xinsert] in inserts:
+                xplace = random.randrange(len(neighbour_may))
+                xinsert = random.randrange(len(neighbour_may))
+            # pop and insert at index
+            popped = neighbour_may.pop(xinsert)
+            neighbour_may.insert(xplace, popped)
+            neighbour = neighbour_may.copy()
+            # if its different from a given order, proceed
+            if neighbour != order:
+                inserts.append([xplace, xinsert])
+        candidates.append(neighbour)
+
+    return candidates
+
+
 def tabu(self, init=None, generate=None, stop=None, neighbourhood_size=5, tabu_list_size=10):
 
     # determine initialization 
