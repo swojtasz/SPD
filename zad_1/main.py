@@ -62,30 +62,58 @@ def main():
         t.start()
         neh_order, neh_c_max = fs_problem.neh()
         neh_exec_time = t.stop()
-        neh_schedule = fs_problem.get_machines_schedule(neh_order)
         fs_problem.check_answer("neh", neh_order, neh_c_max)
 
         t.start()
         neh_mod1_order, neh_mod1_c_max = fs_problem.neh(mod=1)
         neh_mod1_exec_time = t.stop()
-        neh_mod1_schedule = fs_problem.get_machines_schedule(neh_mod1_order)
 
         t.start()
         neh_mod2_order, neh_mod2_c_max = fs_problem.neh(mod=2)
         neh_mod2_exec_time = t.stop()
-        neh_mod3_schedule = fs_problem.get_machines_schedule(neh_mod2_order)
 
         t.start()
         neh_mod3_order, neh_mod3_c_max = fs_problem.neh(mod=3)
         neh_mod3_exec_time = t.stop()
-        neh_mod3_schedule = fs_problem.get_machines_schedule(neh_mod3_order)
+
+        # all random, different generation, 20s timeout
+        t.start()
+        tabu_1_order, tabu_1_cmax = fs_problem.tabu(init='random', generate='swap', stop=('timeout', 20))
+        tabu_1_exec_time = t.stop()
 
         t.start()
-        # tabu_order, tabu_cmax = fs_problem.tabu(init=[1,2,3], stop=('timeout', 4))
-        tabu_order, tabu_cmax = fs_problem.tabu(init='neh', stop=('iter', 50000))
-        # tabu_order, tabu_cmax = fs_problem.tabu(init='random', stop=('improvement', 1000))
-        tabu_exec_time = t.stop()
-        tabu_schedule = fs_problem.get_machines_schedule(tabu_order)
+        tabu_2_order, tabu_2_cmax = fs_problem.tabu(init='random', generate='insert', stop=('timeout', 20))
+        tabu_2_exec_time = t.stop()
+
+        t.start()
+        tabu_3_order, tabu_3_cmax = fs_problem.tabu(init='random', generate='inverse', stop=('timeout', 20))
+        tabu_3_exec_time = t.stop()
+
+        # all neh, different generation, 20s timeout
+        t.start()
+        tabu_4_order, tabu_4_cmax = fs_problem.tabu(init='neh', generate='swap', stop=('timeout', 20))
+        tabu_4_exec_time = t.stop()
+
+        t.start()
+        tabu_5_order, tabu_5_cmax = fs_problem.tabu(init='neh', generate='insert', stop=('timeout', 20))
+        tabu_5_exec_time = t.stop()
+
+        t.start()
+        tabu_6_order, tabu_6_cmax = fs_problem.tabu(init='neh', generate='inverse', stop=('timeout', 20))
+        tabu_6_exec_time = t.stop()
+
+        # all neh, all swap generation, 10k iterations improvement, different neighbourhood size
+        t.start()
+        tabu_7_order, tabu_7_cmax = fs_problem.tabu(init='neh', generate='swap', stop=('improvement', 10000), neighbourhood_size=5)
+        tabu_7_exec_time = t.stop()
+
+        t.start()
+        tabu_8_order, tabu_8_cmax = fs_problem.tabu(init='neh', generate='swap', stop=('improvement', 10000), neighbourhood_size=10)
+        tabu_8_exec_time = t.stop()
+
+        t.start()
+        tabu_9_order, tabu_9_cmax = fs_problem.tabu(init='neh', generate='swap', stop=('improvement', 10000), neighbourhood_size=15)
+        tabu_9_exec_time = t.stop()
 
         print('{0:<20}{1:<10}{2:<14}{3}'.format("algorithm/data", "c_max", "exec time", "order"))
         print(*['-'] * 50)
@@ -96,7 +124,16 @@ def main():
         print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH MOD 1", neh_mod1_c_max, neh_mod1_exec_time, neh_mod1_order))
         print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH MOD 2", neh_mod2_c_max, neh_mod2_exec_time, neh_mod2_order))
         print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("NEH MOD 3", neh_mod3_c_max, neh_mod3_exec_time, neh_mod3_order))
-        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("Tabu Search", tabu_cmax, tabu_exec_time, tabu_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("TS rdm swp 5", tabu_1_cmax, tabu_1_exec_time, tabu_1_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("TS rdm ins 5", tabu_2_cmax, tabu_2_exec_time, tabu_2_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("TS rdm inv 5", tabu_3_cmax, tabu_3_exec_time, tabu_3_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("TS neh swp 5", tabu_4_cmax, tabu_4_exec_time, tabu_4_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("TS neh ins 5", tabu_5_cmax, tabu_5_exec_time, tabu_5_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("TS neh inv 5", tabu_6_cmax, tabu_6_exec_time, tabu_6_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("TS neh swp 5", tabu_7_cmax, tabu_7_exec_time, tabu_7_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("TS neh swp 10", tabu_8_cmax, tabu_8_exec_time, tabu_8_order))
+        print('{0:<20}{1:<10}{2:<14.6f}{3}'.format("TS neh swp 15", tabu_9_cmax, tabu_9_exec_time, tabu_9_order))
+
 
         # fs_problem.display_gantt_chart(optimal_schedule, optimal_order)
         # fs_problem.display_gantt_chart(johnson_schedule, johnson_order)
