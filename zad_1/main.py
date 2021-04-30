@@ -6,6 +6,7 @@ import neh
 import tabu
 from rpq_problem import RPQProblem
 
+
 class Timer:
     def __init__(self):
         self.start_time = 0
@@ -45,18 +46,19 @@ def main():
     t = Timer()
     for path in args.filepaths:
         rpq_problem = RPQProblem(get_file_content(path))
+        rpq_problem2 = RPQProblem(get_file_content(path))
         # print('R P Q')
         # for i in range(rpq_problem.jobs_count):
         #     print(rpq_problem.jobs[i].r, rpq_problem.jobs[i].p, rpq_problem.jobs[i].q)
 
         cmax, pi = rpq_problem.SchrageWithoutQueue()
-
+        cmaxprzerwania = rpq_problem2.SchragePMTN()
         print("PI - order:")
         for i in range(rpq_problem.jobs_count):
             print(pi[i].r, pi[i].p, pi[i].q)
         print("==============================")
         print("CMAX:" + str(cmax))
-
+        print("CMAX pmtn:" + str(cmaxprzerwania))
 
 
     # args = parse_arguments()
