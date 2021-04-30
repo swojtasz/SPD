@@ -59,13 +59,48 @@ class RPQProblem:
                 N.remove(N[min_index])
             if(len(G) == 0):
                 t = self.minR(N)
-            elif (G != 0):
+            else:
+            # elif (G != 0):
                 max_index = self.maxQindex(G)
                 pi.append(G[max_index])
                 t += G[max_index].p
                 cmax = max(cmax, t + G[max_index].q)
                 G.remove(G[max_index])
         return cmax, pi
+
+
+
+    def SchragePMTN(self):
+        G = []
+        N = self.jobs
+        t = 0
+        l = RPQ(N[0].r, N[0].p, N[0].q)
+        l.q = math.inf
+        cmax = 0
+
+
+        while(len(G) != 0 or len(N) != 0):
+            while(len(N) !=0 and self.minR(N) <= t):
+                min_index = self.minRindex(N)
+                G.append(N[min_index])
+                N.remove(N[min_index])
+                if G[-1].q > l.q:
+                    l.p = t - G[-1].r
+                    t = G[-1].r
+                    if l.p > 0:
+                        G.append(l)
+
+            if(len(G) == 0):
+                t = self.minR(N)
+            else:
+                max_index = self.maxQindex(G)
+                t += G[max_index].p
+                cmax = max(cmax, t + G[max_index].q)
+                foo = G.copy()
+                l = foo[max_index]
+                G.remove(G[max_index])
+
+        return cmax
 
 
 
