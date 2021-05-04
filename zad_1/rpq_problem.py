@@ -110,15 +110,8 @@ class RPQProblem:
                 if G[-1].q > l.q:
                     l.p = t - G[-1].r                    
                     t = G[-1].r
-                    print("zwykly G-1:",G[-1])
-                    print("zwykly l:",l)
-                    print("zwykly t:",t)
-
-                    print("")
                     if l.p > 0:
                         G.append(l)
-                        # print("zwykly l:",l.r,l.p,l.q)
-
 
             if(len(G) == 0):
                 t = self.minR(N)
@@ -129,48 +122,4 @@ class RPQProblem:
                 foo = G.copy()
                 l = foo[max_index]
                 G.remove(G[max_index])
-        return cmax
-
-    def SchragePMTN(self):
-        G = Queue()
-        N = Queue()
-        for j in self.jobs:
-            N.insert(j, -j.r)
-        t = 0
-        l = RPQ(self.jobs[0].r, self.jobs[0].p, self.jobs[0].q)
-        l.q = math.inf
-        cmax = 0
-
-        while(len(G.jobs) != 0 or len(N.jobs) != 0):
-            while(len(N.jobs) !=0 and N.get_root_r() <= t):
-                min_r_job = N.pop()
-                
-                G.insert(min_r_job, min_r_job.q)
-
-                if min_r_job.q > l.q:
-                    l.p = t - min_r_job.r
-                    t = min_r_job.r
-                    print("niezwykly G-1:",min_r_job)
-                    print("niezwykly l:",l)
-                    print("niezwykly t:",t)
-
-                    print("")
-                    if l.p > 0:
-                        G.insert(l, l.q)
-                        # print("niezwykly l:",l.r,l.p,l.q)
-
-
-            if(len(G.jobs) == 0):
-                t = N.get_root_r()
-            else:
-                # max_index = self.maxQindex(G)
-                max_q_job = G.pop()
-                t += max_q_job.p
-                cmax = max(cmax, t + max_q_job.q)
-                # foo = G.copy()
-                # l = foo[max_index]
-                l = max_q_job
-                # print("niezwykly l:",l.r,l.p,l.q)
-
-
         return cmax
