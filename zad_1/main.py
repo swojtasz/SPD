@@ -62,7 +62,10 @@ def main():
         print("==============================")
         print("CMAX:", cmax1)
         print("CMAX pmtn:", cmax2)
-
+        cmax3 = rpq_problem.SchragePMTNWithoutQueue()
+        print("CMAX PMTN:", cmax3)
+        print("==============================")
+        print("==============================")
 
 if __name__ == "__main__":
     main()
