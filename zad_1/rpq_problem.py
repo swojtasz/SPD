@@ -94,10 +94,11 @@ class RPQProblem:
                 G.remove(G[max_index])
         return cmax, pi
 
-    def Schrage(self):
+    def Schrage(self, given_order=None):
         G = Queue()
         N = Queue()
-        for j in deepcopy(self.jobs):
+        jobs = given_order if given_order else deepcopy(self.jobs)
+        for j in jobs:
             N.insert(j, -j.r)
         t = N.get_root_r()
         cmax = 0
@@ -114,6 +115,7 @@ class RPQProblem:
                 pi.append(max_q_job)
                 t += max_q_job.p
                 cmax = max(cmax, t + max_q_job.q)
+                max_q_job.C = t
         return cmax, pi
 
     def SchragePMTNWithoutQueue(self, given_order=None):
@@ -147,10 +149,11 @@ class RPQProblem:
                 G.remove(G[max_index])
         return cmax
 
-    def SchragePMTN(self):
+    def SchragePMTN(self, given_order=None):
         G = Queue()
         N = Queue()
-        for j in deepcopy(self.jobs):
+        jobs = given_order if given_order else deepcopy(self.jobs)
+        for j in jobs:
             N.insert(j, -j.r)
         t = 0
         l = RPQ(N.jobs[0].r, N.jobs[0].p, N.jobs[0].q)
@@ -202,7 +205,7 @@ class RPQProblem:
         else:
             return c_index
 
-    def Carlier(self, pi_given):
+    def CarlierWithoutQueue(self, pi_given):
         U, pi = RPQProblem.SchrageWithoutQueue(self, pi_given)
         if U < self.UB:
             self.UB = U
@@ -223,7 +226,7 @@ class RPQProblem:
         pi[pi.index(c)].r = max(pi[pi.index(c)].r, el_K.r + el_K.p)
         LB = RPQProblem.SchragePMTNWithoutQueue(self, deepcopy(pi))
         if LB < self.UB:
-            self.Carlier(deepcopy(pi))
+            self.CarlierWithoutQueue(deepcopy(pi))
         pi[c_index].r = r_c
 
         c_index = pi.index(c)
@@ -231,7 +234,39 @@ class RPQProblem:
         pi[pi.index(c)].q = max(pi[pi.index(c)].q, el_K.q + el_K.p)
         LB = RPQProblem.SchragePMTNWithoutQueue(self, deepcopy(pi))
         if LB < self.UB:
+            self.CarlierWithoutQueue(deepcopy(pi))
+        pi[c_index].q = q_c
+        return self.UB
+
+    def Carlier(self, pi_given):
+        U, pi = RPQProblem.Schrage(self, pi_given)
+        if U < self.UB:
+            self.UB = U
+            pi_star = pi
+        b = self.findb(pi, U)
+        a = self.finda(pi, U, b)
+        c = self.findc(pi, U, a, b)
+        if c == -1:
+            return self.UB
+        K = pi[pi.index(c)+1:pi.index(b)+1]
+        el_K = RPQ(0, 0, 0, 0)
+        el_K.r = self.minR(K)
+        el_K.q = self.minQ(K)
+        el_K.p = self.sumP(K)
+
+        c_index = pi.index(c)
+        r_c = pi[c_index].r
+        pi[pi.index(c)].r = max(pi[pi.index(c)].r, el_K.r + el_K.p)
+        LB = RPQProblem.SchragePMTN(self, deepcopy(pi))
+        if LB < self.UB:
+            self.Carlier(deepcopy(pi))
+        pi[c_index].r = r_c
+
+        c_index = pi.index(c)
+        q_c = pi[c_index].q
+        pi[pi.index(c)].q = max(pi[pi.index(c)].q, el_K.q + el_K.p)
+        LB = RPQProblem.SchragePMTN(self, deepcopy(pi))
+        if LB < self.UB:
             self.Carlier(deepcopy(pi))
         pi[c_index].q = q_c
         return self.UB
-        

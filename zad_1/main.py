@@ -1,3 +1,4 @@
+from copy import deepcopy
 import time
 import argparse
 import random
@@ -67,8 +68,14 @@ def main():
         print("CMAX pmtn queue:", cmax4)
         
         print("==============================")
-        given = rpq_problem.jobs
-        cmax4 = rpq_problem.Carlier(given)
-        print("CMAX Carlier:", cmax4)
+        t.start()
+        cmax = rpq_problem.CarlierWithoutQueue(deepcopy(rpq_problem.jobs))
+        s1 = t.stop()
+        t.start()
+        cmax_q = rpq_problem.Carlier(deepcopy(rpq_problem.jobs))
+        s2 = t.stop()
+        print("CMAX Carlier:", cmax, s1)
+        print("CMAX Carlier queue:", cmax_q, s2)
+
 if __name__ == "__main__":
     main()
