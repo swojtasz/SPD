@@ -1,11 +1,13 @@
 import time
 import argparse
 import random
+import math
+
 from fs_problem import FSProblem
+from rpq_problem import RPQProblem
+
 import neh
 import tabu
-import math
-from rpq_problem import RPQProblem
 
 
 class Timer:
@@ -44,32 +46,27 @@ def main():
     t = Timer()
     for path in args.filepaths:
         rpq_problem = RPQProblem(get_file_content(path))
-        # print('R P Q')
-        # for i in range(rpq_problem.jobs_count):
-        #     print(rpq_problem.jobs[i].r, rpq_problem.jobs[i].p, rpq_problem.jobs[i].q)
-        # t.start()
-        # cmax1, pi = rpq_problem.SchrageWithoutQueue()
-        # s1 = t.stop()
-        # t.start()
-        # cmax2, pi = rpq_problem.Schrage()
-        # s2 = t.stop()
-
         print("file:", path)
-        # print("normal:", s1)
-        # print("queue:", s2)
-        # print("PI - order:")
-        # for i in range(rpq_problem.jobs_count):
-        #     print(pi[i].r, pi[i].p, pi[i].q)
-        # print("==============================")
-        # print("CMAX:", cmax1)
-        # print("CMAX queue:", cmax2)
-        #
-        #
-        # cmax3 = rpq_problem.SchragePMTNWithoutQueue()
-        # print("CMAX PMTN:", cmax3)
-        # print("==============================")
-        # print("==============================")
 
+        t.start()
+        cmax1, pi = rpq_problem.SchrageWithoutQueue()
+        s1 = t.stop()
+        t.start()
+        cmax2, pi = rpq_problem.Schrage()
+        s2 = t.stop()
+        t.start()
+        cmax3 = rpq_problem.SchragePMTNWithoutQueue()
+        s3 = t.stop()
+        t.start()
+        cmax4 = rpq_problem.SchragePMTN()
+        s4 = t.stop()
+
+        print("CMAX", cmax1)
+        print("CMAX queue:", cmax2)
+        print("CMAX pmtn:", cmax3)
+        print("CMAX pmtn queue:", cmax4)
+        
+        print("==============================")
         given = rpq_problem.jobs
         cmax4 = rpq_problem.Carlier(given)
         print("CMAX Carlier:", cmax4)

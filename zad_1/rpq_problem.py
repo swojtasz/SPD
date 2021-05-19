@@ -1,13 +1,15 @@
 import math
-from queue_rpq import Queue
+from queue import Queue
 from copy import deepcopy
+
+
 class RPQ:
     r = 0
     q = 0
     p = 0
     C = 0
 
-    def __init__(self, r, p, q, C):
+    def __init__(self, r, p, q, C=None):
         self.r = r
         self.p = p
         self.q = q
@@ -68,7 +70,7 @@ class RPQProblem:
 
     def SchrageWithoutQueue(self, given_order=None):
         G = []
-        N = self.jobs.copy()
+        N = deepcopy(self.jobs)
         if given_order is not None:
             N = given_order
         t = self.minR(N)
@@ -95,7 +97,7 @@ class RPQProblem:
     def Schrage(self):
         G = Queue()
         N = Queue()
-        for j in self.jobs:
+        for j in deepcopy(self.jobs):
             N.insert(j, -j.r)
         t = N.get_root_r()
         cmax = 0
@@ -116,7 +118,7 @@ class RPQProblem:
 
     def SchragePMTNWithoutQueue(self, given_order=None):
         G = []
-        N = self.jobs.copy()
+        N = deepcopy(self.jobs)
         if given_order is not None:
             N = given_order
         t = 0
@@ -143,6 +145,35 @@ class RPQProblem:
                 foo = G.copy()
                 l = foo[max_index]
                 G.remove(G[max_index])
+        return cmax
+
+    def SchragePMTN(self):
+        G = Queue()
+        N = Queue()
+        for j in deepcopy(self.jobs):
+            N.insert(j, -j.r)
+        t = 0
+        l = RPQ(N.jobs[0].r, N.jobs[0].p, N.jobs[0].q)
+        l.q = math.inf
+        cmax = 0
+
+        while(len(G.jobs) != 0 or len(N.jobs) != 0):
+            while(len(N.jobs) !=0 and N.get_root_r() <= t):
+                min_r_job = N.pop() 
+                G.insert(min_r_job, min_r_job.q)
+                if min_r_job.q > l.q:
+                    l.p = t - min_r_job.r                    
+                    t = min_r_job.r
+                    if l.p > 0:
+                        G.insert(l, l.q)
+
+            if(len(G.jobs) == 0):
+                t = N.get_root_r()
+            else:
+                max_q_job = G.pop()
+                t += max_q_job.p
+                cmax = max(cmax, t + max_q_job.q)
+                l = max_q_job
         return cmax
 
     def findb(self, jobs, cmax):
@@ -203,3 +234,4 @@ class RPQProblem:
             self.Carlier(deepcopy(pi))
         pi[c_index].q = q_c
         return self.UB
+        
