@@ -16,9 +16,11 @@ class RPQ:
         self.C = C
 
     def __str__(self):
-        return f"{self.r} {self.p} {self.q}"
+        return f"{self.r} {self.p} {self.q} {self.C}"
 
 class RPQProblem:
+    from tabu_car import tabu, get_cmax
+
     def __init__(self, lines):
         self.jobs_count, self.parametres_count = (int(val) for val in lines[0].split())
 
