@@ -6,6 +6,7 @@ import math
 
 from fs_problem import FSProblem
 from rpq_problem import RPQProblem
+import  rpq_solver
 
 import neh
 import tabu
@@ -34,10 +35,12 @@ def get_file_content(filepath):
         print(f"There is no file named {filepath} .")
         exit()
 
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('filepaths', metavar='filepaths', nargs='+', help='list of data filepaths to be processed')
-    parser.add_argument('--brutal', nargs='?', const=True, default=False, help='number of processes utilized for bruteforce method')
+    parser.add_argument('--brutal', nargs='?', const=True, default=False,
+                        help='number of processes utilized for bruteforce method')
     parser.add_argument('--workers', type=int, default=1, help='number of processes utilized for bruteforce method')
     return parser.parse_args()
 
@@ -50,43 +53,50 @@ def main():
         print("file:", path)
         print("=========== SCHRAGE ===========")
 
-        # t.start()
-        # cmax1, pi = rpq_problem.SchrageWithoutQueue()
-        # s1 = t.stop()
-        # t.start()
-        # cmax2, pi = rpq_problem.Schrage()
-        # s2 = t.stop()
-        # t.start()
-        # cmax3 = rpq_problem.SchragePMTNWithoutQueue()
-        # s3 = t.stop()
-        # t.start()
-        # cmax4 = rpq_problem.SchragePMTN()
-        # s4 = t.stop()
+        t.start()
+        cmax1, pi1 = rpq_problem.SchrageWithoutQueue()
+        s1 = t.stop()
+        t.start()
+        cmax2, pi2 = rpq_problem.Schrage()
+        s2 = t.stop()
+        t.start()
+        cmax3 = rpq_problem.SchragePMTNWithoutQueue()
+        s3 = t.stop()
+        t.start()
+        cmax4 = rpq_problem.SchragePMTN()
+        s4 = t.stop()
 
-        # print("CMAX", cmax1)
-        # print("CMAX queue:", cmax2)
-        # print("CMAX pmtn:", cmax3)
-        # print("CMAX pmtn queue:", cmax4)
-        
+
+        print("CMAX", cmax1, s1)
+        print("CMAX queue:", cmax2, s2)
+        print("CMAX pmtn:", cmax3, s3)
+        print("CMAX pmtn queue:", cmax4, s4)
+
         print("=========== CARLIER ===========")
 
-        # t.start()
-        # cmax = rpq_problem.CarlierWithoutQueue(deepcopy(rpq_problem.jobs))
-        # s1 = t.stop()
-        # t.start()
-        # cmax_q = rpq_problem.Carlier(deepcopy(rpq_problem.jobs))
-        # s2 = t.stop()
+        t.start()
+        cmax = rpq_problem.CarlierWithoutQueue(deepcopy(rpq_problem.jobs))
+        s1 = t.stop()
 
-        # print("CMAX Carlier:", cmax, s1)
-        # print("CMAX Carlier queue:", cmax_q, s2)
+        t.start()
+        cmax_q = rpq_problem.Carlier(deepcopy(rpq_problem.jobs))
+        s2 = t.stop()
+
+        print("CMAX Carlier:", cmax, s1)
+        print("CMAX Carlier queue:", cmax_q, s2)
 
         print("============ TABU =============")
 
-        # t.start()
-        # order, cmax = rpq_problem.tabu(init='schrage',  generate='insert', stop=('timeout', 10))
-        # s1 = t.stop()
-        # print("CMAX tabu:", cmax, s1)
+        t.start()
+        order, cmax = rpq_problem.tabu(init='schrage',  generate='insert', stop=('timeout', 10))
+        s1 = t.stop()
+        print("CMAX tabu:", cmax, s1)
 
+        print("=========== SOLVER ============")
+
+        info, s = rpq_solver.solver(path)
+
+        print(info, s)
 
 if __name__ == "__main__":
     main()
